@@ -1,0 +1,11 @@
+node_modules
+.git
+.github
+.env
+data
+backups
+uploads
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+npm-debug.log*
