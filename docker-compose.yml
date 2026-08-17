@@ -1,0 +1,20 @@
+services:
+  kas-besar:
+    build: .
+    container_name: ainet-kas-besar
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: ${PORT:-8094}
+      DATA_DIR: /app/data
+      BACKUP_DIR: /app/backups
+      UPLOAD_DIR: /app/uploads
+    ports:
+      - "${PORT:-8094}:${PORT:-8094}"
+    volumes:
+      - ./data:/app/data
+      - ./backups:/app/backups
+      - ./uploads:/app/uploads
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
