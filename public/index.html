@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#174ea6">
+  <title>AINET Kas Besar</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <section id="loginView" class="login-shell">
+    <div class="login-card">
+      <div class="brand-mark">A</div>
+      <div>
+        <p class="eyebrow">AINET FINANCE</p>
+        <h1 id="loginTitle">Kas Besar</h1>
+        <p class="muted">Treasury & Cash Management</p>
+      </div>
+      <form id="loginForm" class="stack">
+        <label>Username<input name="username" autocomplete="username" required></label>
+        <label>Password<div class="password-wrap"><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><button type="button" class="eye" data-eye="loginPassword">◉</button></div></label>
+        <button class="primary wide" type="submit">Masuk</button>
+      </form>
+      <small id="loginCompany" class="muted"></small>
+    </div>
+  </section>
+
+  <div id="appView" class="app-shell hidden">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-row">
+        <div class="brand-mark small">A</div>
+        <div><strong id="appName">AINET Kas Besar</strong><span id="companyName">PT Axindo Infinitas Network</span></div>
+      </div>
+      <nav id="nav">
+        <p>Utama</p>
+        <button data-page="dashboard" class="active">Dashboard</button>
+        <button data-page="income">Penerimaan</button>
+        <button data-page="expense">Pengeluaran</button>
+        <button data-page="payments">Permintaan Pembayaran</button>
+        <button data-page="transfers">Transfer Dana</button>
+        <button data-page="approval">Approval</button>
+        <p>Bank & Kas</p>
+        <button data-page="funds">Akun Bank & Kas</button>
+        <p>Master</p>
+        <button data-page="vendors">Vendor</button>
+        <button data-page="cost-centers">Cost Center</button>
+        <p>Laporan</p>
+        <button data-page="ledger">Buku Kas Besar</button>
+        <button data-page="audit">Audit Log</button>
+        <p class="super-only">Super Admin</p>
+        <button data-page="users" class="super-only">Pengguna</button>
+        <button data-page="settings" class="super-only">Pengaturan</button>
+        <button data-page="backup" class="super-only">Backup</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div><strong id="sidebarUser"></strong><span id="sidebarRole"></span></div>
+        <button id="logoutBtn" class="ghost">Keluar</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button id="menuBtn" class="icon-btn">☰</button>
+        <div><p class="eyebrow">AINET FINANCE</p><h2 id="pageTitle">Dashboard</h2></div>
+        <div id="syncBadge" class="sync-badge">Kas Kecil: cek...</div>
+      </header>
+      <section id="content" class="content"></section>
+      <footer>AINET Kas Besar <span id="version">v1.0.0</span> · Create By Apraditya</footer>
+    </main>
+  </div>
+
+  <dialog id="modal" class="modal"><form method="dialog"><button class="modal-close">×</button></form><div id="modalBody"></div></dialog>
+  <script src="/app.js" defer></script>
+</body>
+</html>
