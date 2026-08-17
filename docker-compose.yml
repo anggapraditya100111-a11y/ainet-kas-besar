@@ -16,5 +16,10 @@ services:
       - ./data:/app/data
       - ./backups:/app/backups
       - ./uploads:/app/uploads
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - ainet-finance
+
+networks:
+  ainet-finance:
+    external: true
+    name: ainet-finance
