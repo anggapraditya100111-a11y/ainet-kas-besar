@@ -35,10 +35,29 @@ mkdir -p data backups uploads
 
 docker network inspect ainet-finance >/dev/null 2>&1 || docker network create ainet-finance >/dev/null
 
+find_kas_kecil_key() {
+  local candidate key
+  for candidate in "/DATA/AppData/kas-kecil/app/.env" "/opt/ainet-kas-kecil/.env"; do
+    if [ -f "$candidate" ]; then
+      key="$(sed -n 's/^KAS_BESAR_INTEGRATION_KEY=//p' "$candidate" | tail -n 1 | tr -d '\r')"
+      if [ -n "$key" ]; then
+        printf '%s' "$key"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
 if [ ! -f .env ]; then
   ADMIN_PASSWORD="$(openssl rand -hex 8)"
   APP_PEPPER="$(openssl rand -hex 32)"
-  INTEGRATION_KEY="$(openssl rand -hex 32)"
+  if INTEGRATION_KEY="$(find_kas_kecil_key)"; then
+    KEY_SOURCE="diambil otomatis dari instalasi Kas Kecil"
+  else
+    INTEGRATION_KEY="$(openssl rand -hex 32)"
+    KEY_SOURCE="dibuat baru; salin ke Kas Kecil bila belum sama"
+  fi
   cat > .env <<EOF
 PORT=$PORT
 TIMEZONE=Asia/Jakarta
@@ -58,8 +77,8 @@ EOF
   echo "Username awal      : admin"
   echo "Password awal      : $ADMIN_PASSWORD"
   echo "Integration key    : $INTEGRATION_KEY"
+  echo "Key source         : $KEY_SOURCE"
   echo "==========================="
-  echo "Integration key yang sama wajib dipasang pada KAS_BESAR_INTEGRATION_KEY di Kas Kecil."
 fi
 
 docker compose up -d --build
