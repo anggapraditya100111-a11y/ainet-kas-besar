@@ -33,6 +33,8 @@ fi
 cd "$APP_DIR"
 mkdir -p data backups uploads
 
+docker network inspect ainet-finance >/dev/null 2>&1 || docker network create ainet-finance >/dev/null
+
 if [ ! -f .env ]; then
   ADMIN_PASSWORD="$(openssl rand -hex 8)"
   APP_PEPPER="$(openssl rand -hex 32)"
@@ -44,7 +46,7 @@ INITIAL_ADMIN_NAME=Administrator
 INITIAL_ADMIN_USERNAME=admin
 INITIAL_ADMIN_PASSWORD=$ADMIN_PASSWORD
 APP_PEPPER=$APP_PEPPER
-KAS_KECIL_INTEGRATION_URL=http://host.docker.internal:8095
+KAS_KECIL_INTEGRATION_URL=http://ainet-kas-kecil-integration:8095
 KAS_BESAR_INTEGRATION_KEY=$INTEGRATION_KEY
 DEFAULT_APP_NAME=AINET Kas Besar
 DEFAULT_COMPANY_NAME=PT Axindo Infinitas Network
@@ -57,7 +59,7 @@ EOF
   echo "Password awal      : $ADMIN_PASSWORD"
   echo "Integration key    : $INTEGRATION_KEY"
   echo "==========================="
-  echo "Integration key yang sama wajib dipasang pada KAS_BESAR_INTEGRATION_KEY di service Kas Kecil."
+  echo "Integration key yang sama wajib dipasang pada KAS_BESAR_INTEGRATION_KEY di Kas Kecil."
 fi
 
 docker compose up -d --build
@@ -65,4 +67,5 @@ docker compose up -d --build
 echo
 echo "AINET Kas Besar aktif di port $PORT"
 echo "Buka: http://IP-SERVER:$PORT"
+echo "Docker network: ainet-finance"
 docker compose ps
