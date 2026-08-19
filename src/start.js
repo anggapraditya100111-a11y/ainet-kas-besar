@@ -1,10 +1,5 @@
 'use strict';
 
-// CasaOS/LAN deployments commonly access the app over plain HTTP.
-// Helmet enables CSP `upgrade-insecure-requests` by default, which can make
-// browsers rewrite local /styles.css and /app.js requests to HTTPS even when
-// no TLS listener exists. Patch Helmet's CSP options before loading server.js
-// so local static assets remain available over the same HTTP origin.
 const helmetPath = require.resolve('helmet');
 const realHelmet = require(helmetPath);
 
@@ -30,18 +25,17 @@ function httpCompatibleHelmet(options = {}) {
 Object.assign(httpCompatibleHelmet, realHelmet);
 require.cache[helmetPath].exports = httpCompatibleHelmet;
 
-// Register additive routes before server.js mounts its API fallback.
 const expressPath = require.resolve('express');
 const realExpress = require(expressPath);
 const registerAddonRoutes = require('./addon-routes');
 const registerMaintenanceRoutes = require('./maintenance-routes');
+const registerReportRoutes = require('./report-routes');
 
 function enhancedExpress(...args) {
   const app = realExpress(...args);
-  // Maintenance registers first so /health and /api/auth/me report the latest
-  // release version while unmatched requests continue to the enhancement/core routes.
   registerMaintenanceRoutes(app, realExpress);
   registerAddonRoutes(app, realExpress);
+  registerReportRoutes(app, realExpress);
   return app;
 }
 
