@@ -1,12 +1,12 @@
 {
   "name": "ainet-kas-besar",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Aplikasi treasury dan cash management internal AINET",
   "main": "src/start.js",
   "scripts": {
     "start": "node src/start.js",
-    "check": "node --check src/start.js && node --check src/server.js && node --check src/db.js && node --check src/security.js && node --check src/integration-client.js && node --check public/app.js",
+    "check": "node --check src/start.js && node --check src/addon-routes.js && node --check src/server.js && node --check src/db.js && node --check src/security.js && node --check src/integration-client.js && node --check public/app.js && node --check public/enhancements.js",
     "test": "node --test tests/*.test.js",
     "verify": "npm run check && npm test"
   },
