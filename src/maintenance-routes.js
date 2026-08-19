@@ -4,6 +4,7 @@ const path = require('node:path');
 const {
   db,
   nowIso,
+  getSetting,
   backupDatabase,
   audit
 } = require('./db');
@@ -12,6 +13,7 @@ const {
   verifyPassword
 } = require('./security');
 
+const APP_VERSION = '1.1.1';
 const COOKIE_NAME = 'kb_session';
 const CONFIRM_TEXT = 'HAPUS SEMUA TRANSAKSI';
 
@@ -33,7 +35,7 @@ function authMiddleware(req, _res, next) {
   const token = parseCookies(req)[COOKIE_NAME];
   if (!token) return next(Object.assign(new Error('Silakan login kembali.'), { status: 401 }));
   const sessionHash = hashToken('SESSION', token);
-  const row = db.prepare(`SELECT s.*,u.id AS uid,u.name,u.username,u.role,u.active,u.password_hash,u.password_salt
+  const row = db.prepare(`SELECT s.*,u.id AS uid,u.name,u.username,u.role,u.active,u.last_login,u.password_hash,u.password_salt
     FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token_hash=?`).get(sessionHash);
   if (!row || row.revoked_at || !row.active || row.expires_at < nowIso()) {
     return next(Object.assign(new Error('Sesi berakhir. Silakan login kembali.'), { status: 401 }));
@@ -45,6 +47,8 @@ function authMiddleware(req, _res, next) {
       name: row.name,
       username: row.username,
       role: row.role,
+      active: Boolean(row.active),
+      lastLogin: row.last_login || '',
       passwordHash: row.password_hash,
       passwordSalt: row.password_salt
     }
@@ -93,8 +97,22 @@ function registerMaintenanceRoutes(app, express) {
   if (app.locals.kasBesarMaintenanceRegistered) return;
   app.locals.kasBesarMaintenanceRegistered = true;
 
+  // Registered before legacy/addon routes so the running version is reported
+  // consistently without modifying the stable core server.
+  app.get('/health', (_req, res) => res.json({ ok: true, service: 'ainet-kas-besar', version: APP_VERSION }));
+
   const router = express.Router();
   const json = express.json({ limit: '128kb' });
+
+  router.get('/auth/me', authMiddleware, (req, res) => {
+    const { passwordHash, passwordSalt, ...user } = req.maintenanceAuth.user;
+    res.json({
+      user,
+      appVersion: APP_VERSION,
+      appName: getSetting('APP_NAME', 'AINET Kas Besar'),
+      companyName: getSetting('COMPANY_NAME', '')
+    });
+  });
 
   router.get('/maintenance/status', authMiddleware, requireSuperAdmin, (_req, res) => {
     res.json({
