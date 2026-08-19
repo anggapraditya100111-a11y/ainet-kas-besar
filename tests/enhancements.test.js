@@ -18,8 +18,7 @@ const registerAddonRoutes = require('../src/addon-routes');
 const app = express();
 registerAddonRoutes(app, express);
 const server = app.listen(0, '127.0.0.1');
-const address = server.address();
-const base = `http://127.0.0.1:${address.port}`;
+let base = '';
 
 const admin = dbmod.db.prepare("SELECT * FROM users WHERE role='SUPER_ADMIN' LIMIT 1").get();
 const rawToken = 'enhancement-test-session-token';
@@ -41,6 +40,12 @@ function request(url, options = {}) {
 
 let transactionAccountId;
 let fundAccountId;
+
+test.before(async () => {
+  if (!server.listening) await new Promise(resolve => server.once('listening', resolve));
+  const address = server.address();
+  base = `http://127.0.0.1:${address.port}`;
+});
 
 test('transaction account CRUD creates accounting-style account', async () => {
   const create = await request('/api/transaction-accounts', {
@@ -84,14 +89,14 @@ test('cash mutation returns opening, in, out, closing and running balance', asyn
   const date = dbmod.localDate();
   dbmod.db.prepare(`INSERT INTO transactions(
     id,transaction_no,transaction_date,fund_account_id,direction,category_id,amount,description,status,cash_effect,source_type,created_by,created_at,approved_by,approved_at
-  ) VALUES(?,?,?,?,?,?,?,?,'APPROVED',1,'DIRECT',?,?,?,?,?)`)
+  ) VALUES(?,?,?,?,?,?,?,?,'APPROVED',1,'DIRECT',?,?,?,?)`)
     .run(security.newId('TRX'), 'TEST-IN-001', date, fundAccountId, 'IN', transactionAccountId, 500000,
       'Penerimaan test', admin.id, ts, admin.id, ts);
 
   const expenseCategory = dbmod.db.prepare("SELECT id FROM transaction_categories WHERE code='OPERASIONAL'").get();
   dbmod.db.prepare(`INSERT INTO transactions(
     id,transaction_no,transaction_date,fund_account_id,direction,category_id,amount,description,status,cash_effect,source_type,created_by,created_at,approved_by,approved_at
-  ) VALUES(?,?,?,?,?,?,?,?,'APPROVED',1,'DIRECT',?,?,?,?,?)`)
+  ) VALUES(?,?,?,?,?,?,?,?,'APPROVED',1,'DIRECT',?,?,?,?)`)
     .run(security.newId('TRX'), 'TEST-OUT-001', date, fundAccountId, 'OUT', expenseCategory.id, 125000,
       'Pengeluaran test', admin.id, ts, admin.id, ts);
 
