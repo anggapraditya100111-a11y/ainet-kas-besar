@@ -13,7 +13,7 @@ const {
   verifyPassword
 } = require('./security');
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.2.0';
 const COOKIE_NAME = 'kb_session';
 const CONFIRM_TEXT = 'HAPUS SEMUA TRANSAKSI';
 
@@ -80,25 +80,18 @@ function dataCounts() {
 }
 
 const clearTransactionData = db.transaction(() => {
-  // Remove child/linked operational records before their parent transactions.
   db.prepare('DELETE FROM approval_actions').run();
   db.prepare('DELETE FROM payment_requests').run();
   db.prepare('DELETE FROM cash_transfers').run();
   db.prepare('UPDATE transactions SET reversed_from_id=NULL WHERE reversed_from_id IS NOT NULL').run();
   db.prepare('DELETE FROM transactions').run();
   db.prepare('DELETE FROM audit_logs').run();
-
-  // Intentionally keep `sequences`. In particular KB-* integration numbers must
-  // never be reused because Kas Kecil keeps the integrationId for idempotency.
-  // Master/configuration tables are also intentionally preserved.
 });
 
 function registerMaintenanceRoutes(app, express) {
   if (app.locals.kasBesarMaintenanceRegistered) return;
   app.locals.kasBesarMaintenanceRegistered = true;
 
-  // Registered before legacy/addon routes so the running version is reported
-  // consistently without modifying the stable core server.
   app.get('/health', (_req, res) => res.json({ ok: true, service: 'ainet-kas-besar', version: APP_VERSION }));
 
   const router = express.Router();
@@ -124,8 +117,6 @@ function registerMaintenanceRoutes(app, express) {
 
   router.get('/maintenance/database/export', authMiddleware, requireSuperAdmin, (req, res, next) => {
     try {
-      // VACUUM INTO inside backupDatabase produces a consistent standalone SQLite
-      // file even when the live database is using WAL mode.
       const file = backupDatabase('transfer');
       const name = `ainet-kas-besar-transfer-${new Date().toISOString().slice(0, 10)}.sqlite`;
       audit(req.maintenanceAuth.user.id, 'DATABASE_EXPORT', 'DATABASE', path.basename(file), '', '', 'Transfer/ekspor database Kas Besar');
