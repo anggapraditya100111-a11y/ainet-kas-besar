@@ -20,6 +20,7 @@ const today = dbmod.localDate();
 const previous = new Date(`${today}T00:00:00Z`);
 previous.setUTCDate(previous.getUTCDate() - 1);
 const yesterday = previous.toISOString().slice(0, 10);
+let txOrder = 0;
 
 const fundId = security.newId('FUND');
 const otherFundId = security.newId('FUND');
@@ -36,10 +37,12 @@ dbmod.db.prepare(`INSERT INTO transaction_categories(id,code,name,scope,active,c
   VALUES(?,?,?,'OUT',1,?,?)`).run(expenseCategory, '5-200', 'Biaya Listrik', ts, ts);
 
 function insertTx({ no, date, fund, direction, category, amount, description, reference }) {
+  txOrder += 1;
+  const createdAt = new Date(new Date(ts).getTime() + txOrder * 1000).toISOString();
   dbmod.db.prepare(`INSERT INTO transactions(
     id,transaction_no,transaction_date,fund_account_id,direction,category_id,amount,description,reference_no,status,cash_effect,source_type,created_by,created_at,approved_by,approved_at
   ) VALUES(?,?,?,?,?,?,?,?,?,'APPROVED',1,'DIRECT',?,?,?,?)`)
-    .run(security.newId('TRX'), no, date, fund, direction, category, amount, description, reference || null, admin.id, ts, admin.id, ts);
+    .run(security.newId('TRX'), no, date, fund, direction, category, amount, description, reference || null, admin.id, createdAt, admin.id, createdAt);
 }
 
 insertTx({ no: 'OPEN-001', date: yesterday, fund: fundId, direction: 'IN', category: incomeCategory, amount: 500000, description: 'Saldo sebelum periode' });
