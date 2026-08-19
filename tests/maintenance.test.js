@@ -17,8 +17,15 @@ const registerMaintenanceRoutes = require('../src/maintenance-routes');
 
 const app = express();
 registerMaintenanceRoutes(app, express);
-const server = app.listen(0, '127.0.0.1');
-const base = `http://127.0.0.1:${server.address().port}`;
+let server;
+let base;
+const serverReady = new Promise((resolve, reject) => {
+  server = app.listen(0, '127.0.0.1', () => {
+    base = `http://127.0.0.1:${server.address().port}`;
+    resolve();
+  });
+  server.once('error', reject);
+});
 
 const admin = dbmod.db.prepare("SELECT * FROM users WHERE role='SUPER_ADMIN' LIMIT 1").get();
 const rawToken = 'maintenance-test-session';
@@ -27,7 +34,8 @@ const now = new Date();
 dbmod.db.prepare('INSERT INTO sessions(token_hash,user_id,created_at,expires_at,last_seen_at) VALUES(?,?,?,?,?)')
   .run(tokenHash, admin.id, now.toISOString(), new Date(now.getTime() + 3600000).toISOString(), now.toISOString());
 
-function request(url, options = {}) {
+async function request(url, options = {}) {
+  await serverReady;
   return fetch(`${base}${url}`, {
     ...options,
     headers: {
@@ -140,8 +148,9 @@ test('clear removes operational data, creates backup and preserves masters/seque
   assert.equal(Number(dbmod.db.prepare("SELECT COUNT(*) AS total FROM audit_logs WHERE action='CLEAR_ALL_TRANSACTIONS'").get().total), 1);
 });
 
-test.after(() => {
-  server.close();
+test.after(async () => {
+  await serverReady.catch(() => {});
+  await new Promise(resolve => server.close(resolve));
   try { dbmod.db.close(); } catch {}
   fs.rmSync(temp, { recursive: true, force: true });
 });
