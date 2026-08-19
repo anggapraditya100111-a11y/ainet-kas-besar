@@ -31,8 +31,6 @@ Object.assign(httpCompatibleHelmet, realHelmet);
 require.cache[helmetPath].exports = httpCompatibleHelmet;
 
 // Register additive routes before server.js mounts its API fallback.
-// This keeps the stable core intact while allowing backwards-compatible
-// enhancements and destructive-data maintenance to remain isolated modules.
 const expressPath = require.resolve('express');
 const realExpress = require(expressPath);
 const registerAddonRoutes = require('./addon-routes');
@@ -40,8 +38,10 @@ const registerMaintenanceRoutes = require('./maintenance-routes');
 
 function enhancedExpress(...args) {
   const app = realExpress(...args);
-  registerAddonRoutes(app, realExpress);
+  // Maintenance registers first so /health and /api/auth/me report the latest
+  // release version while unmatched requests continue to the enhancement/core routes.
   registerMaintenanceRoutes(app, realExpress);
+  registerAddonRoutes(app, realExpress);
   return app;
 }
 
