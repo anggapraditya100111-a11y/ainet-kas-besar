@@ -30,16 +30,18 @@ function httpCompatibleHelmet(options = {}) {
 Object.assign(httpCompatibleHelmet, realHelmet);
 require.cache[helmetPath].exports = httpCompatibleHelmet;
 
-// Register additive finance routes before server.js mounts its API fallback.
-// This keeps the stable v1.0 core intact while allowing safe, backwards-
-// compatible enhancements for account masters, profile and cash mutation.
+// Register additive routes before server.js mounts its API fallback.
+// This keeps the stable core intact while allowing backwards-compatible
+// enhancements and destructive-data maintenance to remain isolated modules.
 const expressPath = require.resolve('express');
 const realExpress = require(expressPath);
 const registerAddonRoutes = require('./addon-routes');
+const registerMaintenanceRoutes = require('./maintenance-routes');
 
 function enhancedExpress(...args) {
   const app = realExpress(...args);
   registerAddonRoutes(app, realExpress);
+  registerMaintenanceRoutes(app, realExpress);
   return app;
 }
 
